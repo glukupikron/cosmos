@@ -1450,8 +1450,21 @@ const STAR_CHARS = [
   { ch: '✯', weight: 1, size: [20,26] },
 ];
 
+const MOBILE_HIDDEN_STAR_CHARS = new Set(['✳', '✴', '✡']);
+
+function isMobileEnvironment() {
+  return window.matchMedia('(max-width: 768px), (hover: none), (pointer: coarse)').matches;
+}
+
+function shouldHideStarOnMobile(ch) {
+  return isMobileEnvironment() && MOBILE_HIDDEN_STAR_CHARS.has(ch);
+}
+
 const starPool = [];
-STAR_CHARS.forEach(s => { for (let i = 0; i < s.weight; i++) starPool.push(s); });
+STAR_CHARS.forEach(s => {
+  if (shouldHideStarOnMobile(s.ch)) return;
+  for (let i = 0; i < s.weight; i++) starPool.push(s);
+});
 
 function createFallingStar() {
   const sf = document.getElementById('starfield');
@@ -1566,9 +1579,9 @@ function drawCosmos(canvas, seed) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
 
-  const sm = ['✳','✴','✵','✶','∗','⁎','*'];
+  const sm = ['✳','✴','✵','✶','∗','⁎','*'].filter(ch => !shouldHideStarOnMobile(ch));
   const md = ['✦','✧','✹','❋','✺'];
-  const lg = ['✡','✫','✬','☆','✯'];
+  const lg = ['✡','✫','✬','☆','✯'].filter(ch => !shouldHideStarOnMobile(ch));
 
   for (let i = 0; i < 80; i++) {
     ctx.fillStyle = `rgba(245,240,232,${rand()*0.5+0.3})`;
