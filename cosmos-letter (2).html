@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Letter From The Stars</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --paper: #f5f0e8;
+    --ink: #1a1a1a;
+    --faded: #8a8478;
+  }
+
+  html, body {
+    background: var(--ink);
+    font-family: 'Courier Prime', 'Courier New', monospace;
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ══════════════════════════════════
+     FALLING STARS
+     ══════════════════════════════════ */
+  #starfield {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .falling-star {
+    position: absolute;
+    color: rgba(245, 240, 232, 0.6);
+    font-family: serif;
+    user-select: none;
+    pointer-events: none;
+    animation: starfall linear infinite;
+    will-change: transform;
+  }
+
+  @keyframes starfall {
+    0%   { transform: translateY(-5vh) rotate(0deg); opacity: 0; }
+    5%   { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(105vh) rotate(45deg); opacity: 0; }
+  }
+
+  .falling-star.twinkle {
+    animation: starfall linear infinite, twinkle 2s ease-in-out infinite;
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* ══════════════════════════════════
+     LAYOUT
+     ══════════════════════════════════ */
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* ══════════════════════════════════
+     INTRO
+     ══════════════════════════════════ */
+  #intro {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    animation: fadeInUp 1.2s ease;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  #intro h1 {
+    font-family: 'Special Elite', cursive;
+    color: var(--paper);
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    opacity: 0.9;
+  }
+
+  #intro p.subtitle {
+    color: var(--faded);
+    font-size: clamp(0.7rem, 1.6vw, 0.85rem);
+    margin-bottom: 48px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .input-group {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 36px;
+  }
+
+  .input-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .input-col label {
+    color: var(--faded);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .input-col select {
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--faded);
+    color: var(--paper);
+    font-family: 'Special Elite', cursive;
+    font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+    text-align: center;
+    padding: 8px 12px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+
+  .input-col select:focus {
+    border-color: var(--paper);
+  }
+
+  .input-col select option {
+    background: #222;
+    color: var(--paper);
+    font-size: 1rem;
+  }
+
+  .btn-generate {
+    background: transparent;
+    border: 1.5px solid var(--faded);
+    color: var(--paper);
+    font-family: 'Special Elite', cursive;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    padding: 14px 40px;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    text-transform: uppercase;
+  }
+
+  .btn-generate:hover {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--paper);
+  }
+
+  .btn-generate:active { transform: scale(0.97); }
+
+  .error-msg {
+    color: #c97;
+    font-size: 0.8rem;
+    margin-top: 14px;
+    opacity: 0;
+    transition: opacity 0.4s;
+    font-family: 'Special Elite', cursive;
+    letter-spacing: 0.05em;
+  }
+
+  .error-msg.show { opacity: 1; }
+
+  /* ══════════════════════════════════
+     RESULT
+     ══════════════════════════════════ */
+  #result {
+    display: none;
+    width: 100%;
+    max-width: 1100px;
+    animation: fadeInUp 1s ease;
+  }
+
+  .paper-container {
+    background: var(--paper);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 620px;
+    box-shadow:
+      4px 4px 0 rgba(0,0,0,0.3),
+      8px 8px 20px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(245,240,232,0.15);
+  }
+
+  .paper-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .letter-side {
+    padding: clamp(24px, 4vw, 52px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    border-right: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .letter-side .quote-mark {
+    font-family: 'Special Elite', cursive;
+    font-size: 3.5rem;
+    line-height: 1;
+    color: var(--faded);
+    opacity: 0.25;
+    margin-bottom: -16px;
+  }
+
+  .letter-text {
+    font-family: 'Special Elite', cursive;
+    font-size: clamp(0.82rem, 1.5vw, 1rem);
+    line-height: 2;
+    color: var(--ink);
+    opacity: 0;
+    min-height: 200px;
+  }
+
+  .letter-text.typing { opacity: 1; }
+  .letter-text .char { opacity: 0; display: inline; }
+  .letter-text .char.visible { opacity: 1; }
+
+  .letter-divider {
+    width: 60px; height: 1.5px;
+    background: var(--ink);
+    margin: 20px 0;
+    opacity: 0;
+    transition: opacity 0.6s ease 0.3s;
+  }
+  .letter-divider.visible { opacity: 0.3; }
+
+  .page-number {
+    font-size: 0.75rem;
+    color: var(--faded);
+    text-align: center;
+    margin-top: 16px;
+    letter-spacing: 0.3em;
+    opacity: 0;
+    transition: opacity 0.8s ease 0.6s;
+  }
+  .page-number.visible { opacity: 0.5; }
+
+  .cosmos-side {
+    background: #000;
+    position: relative;
+    overflow: hidden;
+    min-height: 400px;
+  }
+
+  .cosmos-canvas {
+    width: 100%; height: 100%; display: block;
+  }
+
+  .cursor-blink {
+    display: inline-block;
+    width: 2px; height: 1em;
+    background: var(--ink);
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: blink 0.8s step-end infinite;
+  }
+
+  .btn-back {
+    position: fixed;
+    top: 20px; left: 20px;
+    background: transparent;
+    border: 1px solid rgba(245,240,232,0.3);
+    color: var(--paper);
+    font-family: 'Special Elite', cursive;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    z-index: 100;
+    display: none;
+  }
+  .btn-back:hover { background: var(--paper); color: var(--ink); }
+
+  @media (max-width: 768px) {
+    .page-wrapper { padding: 10px; }
+    .paper-container {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+    }
+    .cosmos-side { order: -1; min-height: 280px; }
+    .letter-side { border-right: none; border-top: 1px solid rgba(0,0,0,0.08); }
+    .btn-back { top: 10px; left: 10px; }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+<button class="btn-back" id="btnBack" onclick="goBack()">← back</button>
+
+<div class="page-wrapper">
+
+  <!-- INTRO -->
+  <div id="intro">
+    <h1>A Letter From The Stars</h1>
+    <p class="subtitle">— when is your birthday? —</p>
+
+    <div class="input-group">
+      <div class="input-col">
+        <label>Month</label>
+        <select id="monthSelect"></select>
+      </div>
+      <div class="input-col">
+        <label>Day</label>
+        <select id="daySelect"></select>
+      </div>
+    </div>
+
+    <button class="btn-generate" onclick="generate()">Open Your Letter</button>
+    <div class="error-msg" id="errorMsg">No letter found for this birthday yet.</div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result">
+    <div class="paper-container">
+      <div class="letter-side">
+        <div class="quote-mark">"</div>
+        <div class="letter-text" id="letterText"></div>
+        <span class="cursor-blink" id="cursor" style="display:none;"></span>
+        <div class="letter-divider" id="divider"></div>
+        <div class="page-number" id="pageNum">117</div>
+      </div>
+      <div class="cosmos-side">
+        <canvas class="cosmos-canvas" id="cosmosCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ┌─────────────────────────────────────────────────┐
+// │                                                 │
+// │   ★  PEOPLE DATABASE  ★                         │
+// │                                                 │
+// │   여기에 사람들을 추가하세요!                      │
+// │   month: 0=Jan, 1=Feb, ... 11=Dec               │
+// │   day: 1-31                                     │
+// │   letter: 그 사람에게 보내는 편지 내용              │
+// │                                                 │
+// │   같은 생일이면 첫 번째 매칭된 사람이 나옵니다.      │
+// │                                                 │
+// └─────────────────────────────────────────────────┘
+
+const PEOPLE = [
+  {
+    name: "지민",
+    month: 2,   // March (0-indexed)
+    day: 15,
+    letter: `A long, long time ago,
+you didn't need a body.
+You played amongst the
+stars, happy and free;
+long before bodies
+were ever invented.
+
+And then, on a quiet
+March morning, you
+chose to arrive.
+
+Happy Birthday, 지민.
+You are stardust,
+remembering itself."`
+  },
+  {
+    name: "수현",
+    month: 7,   // August
+    day: 22,
+    letter: `A long, long time ago,
+you didn't need a body.
+You danced between
+galaxies, weightless
+and wonderful.
+
+Then on an August night,
+warm with summer air,
+you decided to begin.
+
+Happy Birthday, 수현.
+The stars still
+remember your name."`
+  },
+  {
+    name: "민호",
+    month: 0,   // January
+    day: 5,
+    letter: `A long, long time ago,
+you didn't need a body.
+You were light itself,
+traveling endless
+distances without
+ever getting tired.
+
+Then in the stillness
+of a January dawn,
+you chose this world.
+
+Happy Birthday, 민호.
+You carry the whole
+universe inside you."`
+  },
+
+  // ── 여기에 더 추가하세요 ──
+  // {
+  //   name: "이름",
+  //   month: 0,    // 0=1월, 1=2월, ... 11=12월
+  //   day: 1,
+  //   letter: `편지 내용..."`
+  // },
+];
+
+// ┌─────────────────────────────────────────────────┐
+// │  DEFAULT LETTER (매칭 안 될 때 나오는 기본 편지)    │
+// │  null로 바꾸면 매칭 안 되면 에러메시지만 나옴       │
+// └─────────────────────────────────────────────────┘
+
+const DEFAULT_LETTER = {
+  name: "You",
+  letter: `A long, long time ago,
+you didn't need a body.
+You played amongst the
+stars, happy and free;
+long before bodies
+were ever invented.
+
+And then one day,
+you chose to come here.
+You picked this exact
+moment, this exact sky,
+to begin your story.
+
+Happy Birthday.
+You are stardust,
+remembering itself."`
+};
+
+// set to null to ONLY show letters for people in the database:
+// const DEFAULT_LETTER = null;
+
+
+// ══════════════════════════════════════════
+// STAR CHARACTERS (from uploaded image)
+// ══════════════════════════════════════════
+const STAR_CHARS = [
+  { ch: '✳', weight: 5, size: [10,14] },
+  { ch: '✴', weight: 4, size: [10,14] },
+  { ch: '✵', weight: 4, size: [11,15] },
+  { ch: '✶', weight: 5, size: [10,14] },
+  { ch: '∗', weight: 6, size: [10,16] },
+  { ch: '⁎', weight: 4, size: [9,13] },
+  { ch: '*', weight: 6, size: [12,18] },
+  { ch: '✦', weight: 3, size: [14,20] },
+  { ch: '✧', weight: 3, size: [16,22] },
+  { ch: '✹', weight: 2, size: [14,18] },
+  { ch: '❋', weight: 2, size: [14,20] },
+  { ch: '✺', weight: 2, size: [15,20] },
+  { ch: '✡', weight: 1, size: [22,32] },
+  { ch: '✫', weight: 1, size: [20,28] },
+  { ch: '✬', weight: 1, size: [20,28] },
+  { ch: '☆', weight: 1, size: [22,30] },
+  { ch: '✯', weight: 1, size: [20,26] },
+];
+
+const starPool = [];
+STAR_CHARS.forEach(s => { for (let i = 0; i < s.weight; i++) starPool.push(s); });
+
+function createFallingStar() {
+  const sf = document.getElementById('starfield');
+  const s = starPool[Math.floor(Math.random() * starPool.length)];
+  const el = document.createElement('div');
+  el.className = 'falling-star' + (Math.random() > 0.7 ? ' twinkle' : '');
+  el.textContent = s.ch;
+  const fontSize = s.size[0] + Math.random() * (s.size[1] - s.size[0]);
+  const duration = 18 + Math.random() * 35;
+  const delay = Math.random() * -duration;
+  el.style.cssText = `
+    left: ${Math.random()*100}%;
+    font-size: ${fontSize}px;
+    opacity: ${0.12 + Math.random()*0.5};
+    animation-duration: ${duration}s;
+    animation-delay: ${delay}s;
+  `;
+  sf.appendChild(el);
+}
+for (let i = 0; i < 60; i++) createFallingStar();
+
+
+// ══════════════════════════════════════════
+// INIT SELECTS
+// ══════════════════════════════════════════
+const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const daysInMonth = [31,29,31,30,31,30,31,31,30,31,30,31];
+
+const monthSel = document.getElementById('monthSelect');
+const daySel = document.getElementById('daySelect');
+
+monthNames.forEach((m, i) => {
+  const o = document.createElement('option');
+  o.value = i; o.textContent = m;
+  monthSel.appendChild(o);
+});
+
+function populateDays() {
+  const max = daysInMonth[parseInt(monthSel.value)];
+  const cur = parseInt(daySel.value) || 1;
+  daySel.innerHTML = '';
+  for (let d = 1; d <= max; d++) {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    if (d === cur) o.selected = true;
+    daySel.appendChild(o);
+  }
+}
+monthSel.addEventListener('change', populateDays);
+populateDays();
+
+
+// ══════════════════════════════════════════
+// LOOKUP
+// ══════════════════════════════════════════
+function findPerson(month, day) {
+  return PEOPLE.find(p => p.month === month && p.day === day) || null;
+}
+
+
+// ══════════════════════════════════════════
+// COSMOS
+// ══════════════════════════════════════════
+function seededRandom(seed) {
+  let s = Math.abs(seed) || 1;
+  return function() { s = (s * 16807) % 2147483647; return (s-1)/2147483646; };
+}
+
+function birthdaySeed(month, day) {
+  return (month+1) * 100 + day + 7919;
+}
+
+function drawCosmos(canvas, seed) {
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height, rand = seededRandom(seed);
+
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, w, h);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const sm = ['✳','✴','✵','✶','∗','⁎','*'];
+  const md = ['✦','✧','✹','❋','✺'];
+  const lg = ['✡','✫','✬','☆','✯'];
+
+  for (let i = 0; i < 80; i++) {
+    ctx.fillStyle = `rgba(245,240,232,${rand()*0.5+0.3})`;
+    ctx.font = `${8+rand()*6}px serif`;
+    ctx.fillText(sm[Math.floor(rand()*sm.length)], rand()*w, rand()*h);
+  }
+  for (let i = 0; i < 20; i++) {
+    ctx.fillStyle = `rgba(245,240,232,${rand()*0.4+0.5})`;
+    ctx.font = `${14+rand()*8}px serif`;
+    ctx.fillText(md[Math.floor(rand()*md.length)], rand()*w, rand()*h);
+  }
+  for (let i = 0; i < 6; i++) {
+    const x = rand()*w*0.8+w*0.1, y = rand()*h*0.8+h*0.1, br = rand()*0.3+0.6;
+    ctx.fillStyle = `rgba(245,240,232,${br})`;
+    ctx.font = `${24+rand()*12}px serif`;
+    ctx.fillText(lg[Math.floor(rand()*lg.length)], x, y);
+    const grd = ctx.createRadialGradient(x,y,0,x,y,30+rand()*20);
+    grd.addColorStop(0, `rgba(245,240,232,${br*0.08})`);
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(x-50,y-50,100,100);
+  }
+  // clusters
+  for (let c = 0; c < 2+Math.floor(rand()*3); c++) {
+    const cx = rand()*w, cy = rand()*h*0.6;
+    for (let i = 0; i < 8+Math.floor(rand()*12); i++) {
+      ctx.fillStyle = `rgba(245,240,232,${rand()*0.4+0.4})`;
+      ctx.font = `${8+rand()*5}px serif`;
+      ctx.fillText(sm[Math.floor(rand()*sm.length)], cx+(rand()-0.5)*100, cy+(rand()-0.5)*80);
+    }
+  }
+  // glow
+  const hy = h*(0.6+rand()*0.15), gx = w*(0.3+rand()*0.4);
+  const glow = ctx.createRadialGradient(gx,hy,0,gx,hy,w*0.35);
+  glow.addColorStop(0,'rgba(245,240,232,0.15)');
+  glow.addColorStop(0.4,'rgba(200,195,185,0.04)');
+  glow.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0,0,w,h);
+  // grain
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const d = img.data, gr = seededRandom(seed+777);
+  for (let i = 0; i < d.length; i += 16) { const g=(gr()-0.5)*10; d[i]+=g; d[i+1]+=g; d[i+2]+=g; }
+  ctx.putImageData(img,0,0);
+}
+
+
+// ══════════════════════════════════════════
+// TYPEWRITER
+// ══════════════════════════════════════════
+let twTimeout = null;
+function stopTypewriter() { if (twTimeout) { clearTimeout(twTimeout); twTimeout = null; } }
+
+function typewriterEffect(el, text, cb) {
+  stopTypewriter();
+  el.innerHTML = '';
+  el.classList.add('typing');
+  const cursor = document.getElementById('cursor');
+  cursor.style.display = 'inline-block';
+
+  const spans = [];
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === '\n') { el.appendChild(document.createElement('br')); spans.push(null); }
+    else {
+      const s = document.createElement('span');
+      s.className = 'char'; s.textContent = text[i];
+      el.appendChild(s); spans.push(s);
+    }
+  }
+  el.appendChild(cursor);
+
+  let idx = 0;
+  function next() {
+    if (idx >= spans.length) { cursor.style.display = 'none'; if (cb) cb(); return; }
+    if (!spans[idx]) { idx++; twTimeout = setTimeout(next, 100); return; }
+    spans[idx].classList.add('visible'); idx++;
+    const ch = text[idx-1];
+    let delay = 30 + Math.random()*20;
+    if (ch===',' || ch===';') delay = 140+Math.random()*60;
+    if (ch==='.') delay = 220+Math.random()*80;
+    if (ch==='\n') delay = 160;
+    twTimeout = setTimeout(next, delay);
+  }
+  twTimeout = setTimeout(next, 400);
+}
+
+
+// ══════════════════════════════════════════
+// GENERATE
+// ══════════════════════════════════════════
+let currentMonth, currentDay;
+
+function generate() {
+  const month = parseInt(monthSel.value);
+  const day = parseInt(daySel.value);
+  const person = findPerson(month, day);
+
+  if (!person && !DEFAULT_LETTER) {
+    const err = document.getElementById('errorMsg');
+    err.classList.add('show');
+    setTimeout(() => err.classList.remove('show'), 2500);
+    return;
+  }
+
+  currentMonth = month;
+  currentDay = day;
+
+  const letterContent = person ? person.letter : DEFAULT_LETTER.letter;
+  const seed = birthdaySeed(month, day);
+
+  document.getElementById('intro').style.display = 'none';
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('btnBack').style.display = 'block';
+
+  setTimeout(() => drawCosmos(document.getElementById('cosmosCanvas'), seed), 50);
+
+  typewriterEffect(
+    document.getElementById('letterText'),
+    letterContent,
+    () => {
+      document.getElementById('divider').classList.add('visible');
+      document.getElementById('pageNum').classList.add('visible');
+    }
+  );
+}
+
+function goBack() {
+  stopTypewriter();
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('btnBack').style.display = 'none';
+  document.getElementById('intro').style.display = 'flex';
+  document.getElementById('letterText').innerHTML = '';
+  document.getElementById('divider').classList.remove('visible');
+  document.getElementById('pageNum').classList.remove('visible');
+}
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('result').style.display === 'block') {
+    drawCosmos(document.getElementById('cosmosCanvas'), birthdaySeed(currentMonth, currentDay));
+  }
+});
+</script>
+</body>
+</html>
