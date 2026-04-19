@@ -5,7 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>A Letter From The Stars</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+  @font-face {
+    font-family: 'DXTypewriter';
+    src: url('./fonts/DX타자Medium.ttf') format('truetype');
+    font-display: swap;
+  }
+
+  @font-face {
+    font-family: 'DXKorean';
+    src: url('./fonts/DX타자Medium.ttf') format('truetype');
+    font-display: swap;
+    unicode-range: U+1100-11FF, U+3130-318F, U+AC00-D7A3;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Nanum+Gothic+Coding:wght@400;700&display=swap');
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -13,14 +26,16 @@
     --paper: #f5f0e8;
     --ink: #1a1a1a;
     --faded: #8a8478;
+    --type-font: 'Courier Prime', 'DXKorean', 'DXTypewriter', 'Courier New', monospace;
   }
 
   html, body {
     background: var(--ink);
-    font-family: 'Courier Prime', 'Courier New', monospace;
+    font-family: var(--type-font);
     color: var(--ink);
     min-height: 100vh;
     overflow-x: hidden;
+    cursor: none;
   }
 
   /* ══════════════════════════════════
@@ -88,7 +103,9 @@
   }
 
   #intro h1 {
-    font-family: 'Special Elite', cursive;
+    font-family: var(--type-font);
+    font-weight: 400;
+    font-style: normal;
     color: var(--paper);
     font-size: clamp(1.5rem, 4vw, 2.6rem);
     letter-spacing: 0.08em;
@@ -130,7 +147,7 @@
     border: none;
     border-bottom: 1.5px solid var(--faded);
     color: var(--paper);
-    font-family: 'Special Elite', cursive;
+    font-family: var(--type-font);
     font-size: clamp(1.2rem, 2.5vw, 1.6rem);
     text-align: center;
     padding: 8px 12px;
@@ -155,7 +172,7 @@
     background: transparent;
     border: 1.5px solid var(--faded);
     color: var(--paper);
-    font-family: 'Special Elite', cursive;
+    font-family: var(--type-font);
     font-size: 1rem;
     letter-spacing: 0.2em;
     padding: 14px 40px;
@@ -178,7 +195,7 @@
     margin-top: 14px;
     opacity: 0;
     transition: opacity 0.4s;
-    font-family: 'Special Elite', cursive;
+    font-family: var(--type-font);
     letter-spacing: 0.05em;
   }
 
@@ -226,17 +243,8 @@
     border-right: 1px solid rgba(0,0,0,0.08);
   }
 
-  .letter-side .quote-mark {
-    font-family: 'Special Elite', cursive;
-    font-size: 3.5rem;
-    line-height: 1;
-    color: var(--faded);
-    opacity: 0.25;
-    margin-bottom: -16px;
-  }
-
   .letter-text {
-    font-family: 'Special Elite', cursive;
+    font-family: var(--type-font);
     font-size: clamp(0.82rem, 1.5vw, 1rem);
     line-height: 2;
     color: var(--ink);
@@ -279,13 +287,11 @@
     width: 100%; height: 100%; display: block;
   }
 
-  .cursor-blink {
-    display: inline-block;
-    width: 2px; height: 1em;
-    background: var(--ink);
-    margin-left: 2px;
-    vertical-align: text-bottom;
-    animation: blink 0.8s step-end infinite;
+  .cosmos-image {
+    width: 100%;
+    height: 100%;
+    display: none;
+    object-fit: cover;
   }
 
   .btn-back {
@@ -294,7 +300,7 @@
     background: transparent;
     border: 1px solid rgba(245,240,232,0.3);
     color: var(--paper);
-    font-family: 'Special Elite', cursive;
+    font-family: var(--type-font);
     font-size: 0.8rem;
     letter-spacing: 0.15em;
     padding: 8px 20px;
@@ -305,20 +311,121 @@
   }
   .btn-back:hover { background: var(--paper); color: var(--ink); }
 
+  .mouse-comet {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    pointer-events: none;
+    color: rgba(245,240,232,0.98);
+    font-family: 'Courier Prime', 'DXKorean', 'DXTypewriter', monospace;
+    font-size: 16px;
+    line-height: 1;
+    text-shadow: 0 0 4px rgba(245,240,232,0.35);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .mouse-comet.visible {
+    opacity: 1;
+  }
+
+  .mouse-comet.symbol {
+    animation: cometGlyphPulse 0.9s ease-in-out infinite;
+  }
+
+  .cursor-trail-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .cursor-trail {
+    position: absolute;
+    height: 0;
+    border-top: 1.2px solid rgba(245,240,232,0.75);
+    transform-origin: 0 0;
+    filter: drop-shadow(0 0 2px rgba(245,240,232,0.2));
+    animation: trailFade 0.55s ease-out forwards;
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    html, body { cursor: auto; }
+    .mouse-comet { display: none; }
+    .cursor-trail-layer { display: none; }
+  }
+
   @media (max-width: 768px) {
     .page-wrapper { padding: 10px; }
+    #intro h1 {
+      font-size: clamp(1.85rem, 7.2vw, 2.35rem);
+      letter-spacing: 0.05em;
+    }
+    #intro p.subtitle {
+      font-size: clamp(0.85rem, 3.3vw, 1rem);
+      letter-spacing: 0.12em;
+      margin-bottom: 36px;
+    }
+    .input-col label {
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+    }
+    .input-col select {
+      font-size: clamp(1.32rem, 5vw, 1.6rem);
+      padding: 10px 12px;
+    }
+    .btn-generate {
+      font-size: 1.05rem;
+      letter-spacing: 0.14em;
+      padding: 14px 28px;
+    }
+    .error-msg {
+      font-size: 0.9rem;
+    }
     .paper-container {
       grid-template-columns: 1fr;
       grid-template-rows: auto auto;
     }
     .cosmos-side { order: -1; min-height: 280px; }
-    .letter-side { border-right: none; border-top: 1px solid rgba(0,0,0,0.08); }
+    .letter-side {
+      border-right: none;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding: clamp(22px, 6.2vw, 32px);
+    }
+    .letter-text {
+      font-size: clamp(1rem, 3.9vw, 1.12rem);
+      line-height: 1.9;
+      min-height: 170px;
+    }
+    .page-number {
+      font-size: 0.84rem;
+      letter-spacing: 0.18em;
+    }
     .btn-back { top: 10px; left: 10px; }
   }
 
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes cometPulse {
+    0%, 100% { opacity: 1; transform: translateY(0); }
+    50% { opacity: 0.65; transform: translateY(-1px); }
+  }
+  @keyframes cometTrail {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.6; }
+  }
+  @keyframes trailFade {
+    0% { opacity: 0.75; }
+    100% { opacity: 0; }
+  }
+  @keyframes cometGlyphPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.06); opacity: 0.85; }
   }
   @keyframes blink {
     0%, 100% { opacity: 1; }
@@ -329,13 +436,15 @@
 <body>
 
 <div id="starfield"></div>
+<div class="cursor-trail-layer" id="cursorTrailLayer" aria-hidden="true"></div>
+<div class="mouse-comet symbol" id="mouseComet" aria-hidden="true">☄</div>
 <button class="btn-back" id="btnBack" onclick="goBack()">← back</button>
 
 <div class="page-wrapper">
 
   <!-- INTRO -->
   <div id="intro">
-    <h1>A Letter From The Stars</h1>
+    <h1>Dear Artlab,</h1>
     <p class="subtitle">— when is your birthday? —</p>
 
     <div class="input-group">
@@ -357,13 +466,12 @@
   <div id="result">
     <div class="paper-container">
       <div class="letter-side">
-        <div class="quote-mark">"</div>
         <div class="letter-text" id="letterText"></div>
-        <span class="cursor-blink" id="cursor" style="display:none;"></span>
         <div class="letter-divider" id="divider"></div>
-        <div class="page-number" id="pageNum">117</div>
+        <div class="page-number" id="pageNum">2026.04.20</div>
       </div>
       <div class="cosmos-side">
+        <img class="cosmos-image" id="cosmosImage" alt="cosmos image">
         <canvas class="cosmos-canvas" id="cosmosCanvas"></canvas>
       </div>
     </div>
@@ -443,6 +551,208 @@ You carry the whole
 universe inside you."`
   },
 
+  {
+    name: "최두은",
+    month: 5,   // June
+    day: 27,
+    letter: `안녕하세요 상무님!
+항상 실원들을 배려하시고 입장을 먼저 생각해주시고, 
+가까이 다가가려고 노력해주셔서 감사하다는 
+말씀 먼저 드리고 싶어요.
+상무님의 시선, 인사이트, 관점들을 저도 많이 배우려고 
+나름대로 애썼는데 돌이켜보면 그 시간들이 
+저한테 정말 귀했습니다!
+톰 삭스 전시 보고 난 후 식사 자리에서 
+저도 모르게 주저리주저리 많은 걸 털어놓았을 때, 
+끝까지 다 경청해주시고 개인적인 경험도 
+많이 나누어주셔서 감사했어요. 
+상무님 앞에서는 늘 조금씩 긴장하게 되면서도, 
+어떤 부분에서는 아주 편하게 느꼈던 것 같아요. 
+그렇게 느낄 수 있도록 배려해주셔서 감사합니다..!
+
+아트랩의 앞으로의 여정 또한 진심으로 응원하고, 
+계속 지켜보겠습니다! 그동안 정말 감사했습니다.`
+  },
+  {
+    name: "한송이",
+    month: 0,   // January
+    day: 21,
+    letter: `안녕하세요 팀장님!
+그동안 누구보다 팀원을 먼저 생각해주시는 
+팀장님 밑에서 일할 수 있어서 감사했습니다. 
+꼼꼼하고 완벽함을 중시하시는 팀장님 덕분에, 
+일하면서 많이 배울 수 있었어요.
+그동안 세심히 지켜봐주시고 챙겨주셔서 감사해요. 
+앞으로도 연락드릴게요!
+감사합니다.`
+  },
+  {
+    name: "황미진",
+    month: 5,   // June
+    day: 16,
+    letter: `안녕하세요 미진 책임님! 
+    2년 4개월동안 깐부가 되어주셔서 감사합니다... <3
+업무에 있어서도, 아트 쪽의 인사이트에 있어서도 
+책임님께 정말 많이 배웠습니다!
+항상 책임님의 시선을 따라가서 그 끝에 무엇이 있을지 
+혼자 궁리하곤 했었어요.
+앞으로도 좋은 소식 있으며 나누고, 자주 연락드릴게요!
+감사합니다!!`
+  },
+  {
+    name: "정윤환",
+    month: 4,   // May
+    day: 2,
+    letter: `윤환 책임님~ 항상 유쾌하게 대해주셔서 감사해요!
+담배도 피시고... 괜히 동질감을 많이 느꼈던 것 같아요.
+1그룹이었다면 좀더 많이 이야기 나눌 수 있었을텐데... 아쉬워요
+책임님의 앞으로의 계획들도 응원합니다! 
+말씀하신 대로 나중에 회식할 때 놀러가도 되지요..?`
+  },
+  {
+    name: "김예지",
+    month: 4,   // May
+    day: 17,
+    letter: `안녕하세요 예지 책임님! 
+    언제나 친절한 미소로 반겨주셔서 감사합니다... 
+    천사같다고 생각했어요 <3
+    책임님을 보면서 항상 어른스러움, 사려깊음이 무엇인지 
+    다시 알게 되었던 것 같아요. 
+    디지털 팀에서도 따뜻하게 배려해주셔서 감사합니다. 
+    덕분에 많이 성장할 수 있었습니다!
+    언젠가 서울대입구에서 같이 마작을... 칠 날이 오기를...`
+  },
+  {
+    name: "김혜진",
+    month: 4,   // May
+    day: 21,
+    letter: `안녕하세요 혜진 매니저님! 
+    그룹은 달랐지만, 디지털, 프로젝트 해시태그 진행하면서
+    부족한 저를 열심히 커버쳐주셔서 감사합니다...
+    특히 회의하면서 너무나 당당하고 프로페셔널하게
+    회의를 이끌어가시는 모습이 아주 멋있었어요!
+    맨저님 노래부르는 모습도 보고싶었는데..! 언젠가 기회가 있기를...`
+  },
+  {
+    name: "김재영",
+    month: 3,   // April
+    day: 2,
+    letter: `재영 매니저님~!
+    가장 많은 프로젝트를 함께한 것 같은데요... 
+    그동안 너무 감사했습니다!
+    제가 어떤 방식으로도 조금만 기여해도 
+    그 부분을 항상 알아주시고 인정해주셔서 감사했을 때가 많았어요!
+    꼼꼼하게 봐주셔서 감사합니다... 결혼도 너무 축하드려요! 
+    매니저님의 새로운 시작도 응원하겠습니다!`
+  },
+  {
+    name: "조윤지",
+    month: 4,   // May
+    day: 10,
+    letter: `윤지 매니저님~!
+너무 슬퍼하지 마세요. 왜냐면 우리는 칭구. 계속 놀러다닐 거니까요.
+윤지 매니저님과 함께한 많고도 적은 나날들...
+앞으로도 이어질 것을 생각하면 매우 기쁘고 두근거리는군요.
+노래방도 많이 가고 방탈출도 하고 연극도 보러 다녀요.
+저는 이제 백수. 귀찮은 건 다 맡겨주세요~!
+같이 계단 올라줘서 고마워요.
+큭큭.`
+  },
+  {
+    name: "장정인",
+    month: null,   // Birthday not confirmed yet
+    day: null,
+    letter: `안녕하세요 정인 팀장님~!
+직접 업무로 연결된 적은 없었지만, 
+회의에서 보여주신 카리스마있는 모습에 몇 번 반했답니다!!
+평소에 장난스럽게 대해주셔서 기뻤어요. 
+팀장님의 플레이리스트는 아직도 탐납니다...
+저번 주에 엘리베이터 앞에서 말씀주신 대로, 
+언젠가 다시 뵐 수 있게 열심히 해보겠습니다~!`
+  },
+  {
+    name: "김수현",
+    month: null,   // Birthday not confirmed yet
+    day: null,
+    letter: `안녕하세요 수현 매니저님!
+인사이트 트립 때 음악 이야기 할 수 있어서 좋았어요.
+언제나 에너지 넘치는 모습이, 프로페셔널한 태도가 너무 멋있다고 생각했었어요!
+더 많이 이야기 나눌 수 있으면 좋았을 텐데, 아쉬워요...
+그동안 감사했습니다!`
+  },
+  {
+    name: "장지혜",
+    month: 5,   // June
+    day: 4,
+    letter: `지혜 책임님, 안녕하세요!
+언제나 밝은 미소로 반겨주셔서 감사해요. 
+우연히 마주치는 날이면 항상 기분이 좋아졌어요ㅎㅎ
+책임님과도 조금 더 이야기를 많이 나눌 수 있으면 좋았을텐데...! 아쉽습니다...
+앞으로도 건강하시고, 좋은 일만 가득하시길 바랄게요!`
+  },
+  {
+    name: "나윤희",
+    month: 10,   // November
+    day: 28,
+    letter: `윤희 책임님!
+제 선배! ㅋㅋ
+처음에 정~말 아무것도 모를 때 많이 챙겨주셔서 감사해요.
+양재 지하식당에서 슬램덩크 이야기, 학교 이야기 하던 순간이 아직도 생생히 기억나요.
+업무적으로도, 일상에서도 존경스러운 선배셨어요. 정말정말 많은 힘이 되었습니다!
+앞으로도 행복한 덕질 생활 하시기를 바라며...!ㅎㅎ
+담에 또 뵈어요!`
+  },
+  {
+    name: "김지원",
+    month: 2,   // March
+    day: 25,
+    letter: `지원 매니저님!
+항상 좋은 것들(빵, 차 등) 나눠주셔서 감사했어요.
+바젤에서 뵀을 때도 바쁘실 텐데 여러모로 챙겨주셨잖아요!
+아트랩의 제니, 지원 매니저님...!
+그리울 거예요ㅠㅠㅠ 그동안 정말 감사했습니다.
+다음에 또 뵐 수 있기를!`
+  },
+  {
+    name: "조제훈",
+    month: 0,   // January
+    day: 29,
+    letter: `제훈 오빠,
+뭔가 수다는 엄청 떨었는데... 생각해보면 제대로 놀아본 적이 없잖아?
+이건 다 제훈이 너무 인싸라서 그래. 그러니까 시간을 좀 내줘!!
+다 같이 놀러가자고...
+처음에 연수 때 저 인싸는 뭐지? 하고 놀랐던 기억이 난다.
+그때도 내 얘기를 아주 잘 들어주었지.
+내가 뱉는 헛소리들 다 주의 깊게 들어주고 반응해줘서 고마워....
+항상 응원합니다. 뭐가 되었든. 진심으로!
+앞으로도 잘 부탁드려요 ^^`
+  },
+  {
+    name: "박세림",
+    month: 5,   // June
+    day: 22,
+    letter: `세림,
+아직도 첫 만남이 생생히 기억난다. 
+나한테 대뜸 만화 얘기를 물어보던 너...
+너는 동의하지 않겠지만 네 얘기들은 언제나 어떤 방향으로든 
+에너지가 넘쳐서 재밌단다.
+주말에 재밌었어! 앞으로도 너만 바쁘지 않으면 많이 놀자고~~~
+하하.
+잘 부탁해.`
+  },
+  {
+    name: "김혜원",
+    month: 1,   // February
+    day: 26,
+    letter: `혜원 매니저님!
+아기 사진 너무 잘 보고 있어요.
+매니저님을 닮아서 그런지 너무 귀엽고 잘생겼어요!
+트랜스로컬과 디지털 업무하면서 부족한 점이 많았는데, 
+항상 인내심을 가지고 챙겨주셔서 감사합니다...
+매니저님의 의욕 넘치는 모습 보면서 저도 많이 배웠어요!
+앞으로도 응원하겠습니다! 그동안 정말 감사했습니다.`
+  },
+
   // ── 여기에 더 추가하세요 ──
   // {
   //   name: "이름",
@@ -459,26 +769,662 @@ universe inside you."`
 
 const DEFAULT_LETTER = {
   name: "You",
-  letter: `A long, long time ago,
-you didn't need a body.
-You played amongst the
-stars, happy and free;
-long before bodies
-were ever invented.
+  letter: `1
 
-And then one day,
-you chose to come here.
-You picked this exact
-moment, this exact sky,
-to begin your story.
+            Immortal Aphrodite, on your intricately brocaded throne,[1]
 
-Happy Birthday.
-You are stardust,
-remembering itself."`
+            child of Zeus, weaver of wiles, this I pray:
+
+            Dear Lady, don't crush my heart
+
+            with pains and sorrows.
+
+
+
+5          But come here, if ever before,
+
+            when you heard my far-off cry,
+
+            you listened. And you came,
+
+            leaving your father's house,
+
+
+
+            yoking your chariot of gold.
+
+10        Then beautiful swift sparrows led you over the black earth
+
+            from the sky through the middle air,
+
+            whirling their wings into a blur.
+
+
+
+            Rapidly they came. And you, O Blessed Goddess,
+
+            a smile on your immortal face,
+
+15        asked what had happened this time,
+
+            why did I call again,
+
+
+
+            and what did I especially desire
+
+            for myself in my frenzied heart:
+
+            "Who this time am I to persuade
+
+20        to your love? Sappho, who is doing you wrong?
+
+
+
+            For even if she flees, soon she shall pursue.
+
+            And if she refuses gifts, soon she shall give them.
+
+            If she doesn't love you, soon she shall love
+
+            even if she's unwilling."
+
+
+
+25        Come to me now once again and release me
+
+            from grueling anxiety.
+
+            All that my heart longs for,
+
+            fulfill. And be yourself my ally in love's battle.
+
+
+
+16
+
+            Some say an army of horsemen,
+
+            some of footsoldiers, some of ships,
+
+            is the fairest thing on the black earth,
+
+            but I say it is what one loves.
+
+
+
+5          It's very easy to make this clear
+
+            to everyone, for Helen,
+
+            by far surpassing mortals in beauty,
+
+            left the best of all husbands
+
+
+
+            and sailed to Troy,
+
+10        mindful of neither her child
+
+            nor her dear parents, but
+
+            with one glimpse she was seduced by
+
+
+
+            Aphrodite. For easily bent...
+
+            and nimbly...[missing text]...
+
+15        has reminded me now
+
+            of Anactoria who is not here;
+
+
+
+            I would much prefer to see the lovely
+
+            way she walks and the radiant glance of her face
+
+            than the war-chariots of the Lydians or
+
+20        their footsoldiers in arms.
+
+
+
+31
+
+            That man to me seems equal to the gods,
+
+            the man who sits opposite you
+
+            and close by listens
+
+            to your sweet voice
+
+
+
+5          and your enticing laughter-
+
+            that indeed has stirred up the heart in my breast.
+
+            For whenever I look at you even briefly
+
+            I can no longer say a single thing,
+
+
+
+            but my tongue is frozen in silence;
+
+10        instantly a delicate flame runs beneath my skin;
+
+            with my eyes I see nothing;
+
+            my ears make a whirring noise.
+
+
+
+            A cold sweat covers me,
+
+            trembling seizes my body,
+
+15        and I am greener than grass.
+
+            Lacking but little of death do I seem.
+
+
+
+sapphic fragments
+
+
+
+1
+
+Come now, luxuriant Graces, and beautiful-haired Muses.
+
+
+
+2
+
+I tell you
+
+someone will remember us
+
+in the future.
+
+
+
+3
+
+Now, I shall sing these songs
+
+Beautifully
+
+for my companions.
+
+4
+
+The moon shone full
+
+And when the maidens stood around the altar...
+
+
+
+5
+
+"He is dying, Aphrodite;
+
+luxuriant Adonis is dying.
+
+What should we do?"
+
+
+
+"Beat your breasts, young maidens.
+
+And tear your garments
+
+in grief."
+
+
+
+6
+
+O, weep for Adonis!
+
+
+
+7
+
+But come, dear companions,
+
+For day is near.
+
+
+
+8
+
+The moon is set. And the Pleiades.
+
+            It's the middle of the night.
+
+                        Time [hora] passes.
+
+But I sleep alone.
+
+
+
+9
+
+I love the sensual.
+
+For me this
+
+and love for the sun
+
+has a share in brilliance and beauty
+
+
+
+10
+
+I desire
+
+And I crave.
+
+
+
+11
+
+You set me on fire.
+
+
+
+12
+
+A servant
+
+of wile-weaving
+
+Aphrodite...
+
+
+
+13
+
+            Eros
+
+Giver of pain...
+
+
+
+14
+
+            Eros
+
+Coming from heaven
+
+throwing off
+
+his purple cloak.
+
+
+
+15
+
+Again love, the limb-loosener, rattles me
+
+bittersweet,
+
+irresistible,
+
+a crawling beast.
+
+
+
+16
+
+As a wind in the mountains
+
+assaults an oak,
+
+Love shook my breast.
+
+
+
+17
+
+I loved you, Atthis, long ago
+
+even when you seemed to me
+
+a small graceless child.
+
+
+
+18
+
+But you hate the very thought of me, Atthis,
+
+And you flutter after Andromeda.
+
+
+
+19
+
+Honestly, I wish I were dead.
+
+Weeping many tears, she left me and said,
+
+"Alas, how terribly we suffer, Sappho.
+
+I really leave you against my will."
+
+
+
+And I answered: "Farewell, go and remember me.
+
+You know how we cared for you.
+
+
+
+If not, I would remind you
+
+ ...of our wonderful times.
+
+
+
+For by my side you put on
+
+many wreaths of roses
+
+and garlands of flowers
+
+around your soft neck.
+
+
+
+And with precious and royal perfume
+
+you anointed yourself.
+
+
+
+On soft beds you satisfied your passion.
+
+
+
+And there was no dance,
+
+no holy place
+
+from which we were absent."
+
+
+
+20
+
+They say that Leda once found
+
+an egg-
+
+like a hyacinth.
+
+
+
+21
+
+"Virginity, virginity
+
+Where will you go when you've left me?"
+
+
+
+"I'll never come back to you , bride,
+
+I'll never come back to you."
+
+
+
+22
+
+Sweet mother, I can't do my weaving-
+
+Aphrodite has crushed me with desire
+
+for a tender youth.
+
+
+
+23
+
+Like a sweet-apple
+
+turning red
+
+high
+
+on the tip
+
+of the topmost branch.
+
+Forgotten by pickers.
+
+
+
+Not forgotten-
+
+they couldn't reach it.
+
+
+
+24
+
+Like a hyacinth
+
+in the mountains
+
+that shepherds crush underfoot.
+
+
+
+Even on the ground
+
+a purple flower.
+
+
+
+25
+
+To what shall I compare you, dear bridegroom?
+
+To a slender shoot, I most liken you.
+
+
+
+26
+
+[Sappho compared the girl to an apple....she compared the bridegroom to Achilles, and likened the young man's deeds to the hero's.]
+
+
+
+                                                            Himerius (4th cent. A.D.), Or. 1.16
+
+
+
+27
+
+Raise high the roofbeams, carpenters!
+
+            Hymenaon, Sing the wedding song!
+
+Up with them!
+
+            Hymenaon, Sing the wedding song!
+
+A bridegroom taller than Ares!
+
+            Hymenaon, Sing the wedding song!
+
+Taller than a tall man!
+
+            Hymenaon, Sing the wedding song!
+
+Superior as the singer of Lesbos-
+
+            Hymenaon, Sing the wedding song!
+
+-to poets of other lands.
+
+            Hymenaon!
+
+
+
+28
+
+The Marriage of Hektor and Andromakhe
+
+
+
+ ...Cyprus...
+
+ ...The herald Idaios came...a swift messenger
+
+ ...and the rest of Asia...unwilting glory (kleos aphthiton).
+
+Hektor and his companions led the dark-eyed
+
+luxuriant Andromakhe from holy Thebes and...Plakia
+
+in ships upon the salty sea. Many golden bracelets and purple
+
+robes..., intricately-worked ornaments,
+
+countless silver cups and ivory.
+
+Thus he spoke. And his dear father quickly leapt up.
+
+And the story went to his friends through the broad city.
+
+And the Trojans joined mules to smooth-running carriages.
+
+And the whole band of women and...maidens got on.
+
+Separately, the daughters of Priam...
+
+And the unmarried men led horses beneath the chariots
+
+and greatly...charioteers...
+
+
+
+                                    ...like gods
+
+                                    ...holy
+
+set forth into Troy...
+
+And the sweet song of the flute mixed...
+
+And the sound of the cymbals, and then the maidens
+
+sang in clear tones a sacred song
+
+and a divinely-sweet echo reached the sky...
+
+And everywhere through the streets...
+
+Mixing bowls and cups...
+
+And myrrh and cassia and frankincense were mingled.
+
+And the older women wailed aloud.
+
+And all the men gave forth a high-pitched song,
+
+calling on Apollo, the far-shooter, skilled in the lyre.
+
+And they sang of Hektor and Andromakhe like to the gods.
+
+
+
+29
+
+Blessed bridegroom,
+
+The marriage is accomplished as you prayed.
+
+You have the maiden you prayed for.
+
+
+
+30
+
+I don't know what to do: I am of two minds.
+
+
+
+31
+
+For gold is Zeus' child.
+
+
+
+32
+
+I have a beautiful daughter
+
+Like a golden flower
+
+My beloved Kleis.
+
+I would not trade her for all Lydia nor lovely...
+
+
+
+33
+
+When you lie dead, no one will remember you
+
+For you have no share in the Muses' roses.
+
+No, flitting aimlessly about,
+
+You will wildly roam,
+
+a shade amidst the shadowy dead.
+
+
+
+34
+
+Death is an evil.
+
+That's what the gods think.
+
+Or they would die.
+
+
+
+35
+
+Because you are dear to me
+
+Marry a younger woman.
+
+I don't dare live with a young man-
+
+I'm older.`
 };
 
 // set to null to ONLY show letters for people in the database:
 // const DEFAULT_LETTER = null;
+
+// 이미지 파일을 쓰고 싶으면 같은 폴더에 파일을 넣고 경로를 입력하세요.
+// 예: "my-cosmos.jpg" 또는 "images/cosmos.png"
+const CUSTOM_COSMOS_IMAGE = "";
+const PERSON_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
 
 // ══════════════════════════════════════════
@@ -563,6 +1509,32 @@ populateDays();
 // ══════════════════════════════════════════
 function findPerson(month, day) {
   return PEOPLE.find(p => p.month === month && p.day === day) || null;
+}
+
+function pickRandomNumberedBlock(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  const normalized = text.replace(/\r\n/g, '\n').trim();
+  const lines = normalized.split('\n');
+  const blocks = [];
+  let current = [];
+  let hasNumberedHeader = false;
+
+  for (const line of lines) {
+    if (/^\s*\d+\s*$/.test(line)) {
+      hasNumberedHeader = true;
+      if (current.length > 0) blocks.push(current.join('\n').trim());
+      current = [line.trim()];
+      continue;
+    }
+    current.push(line);
+  }
+
+  if (current.length > 0) blocks.push(current.join('\n').trim());
+  if (!hasNumberedHeader || blocks.length === 0) return normalized;
+
+  const idx = Math.floor(Math.random() * blocks.length);
+  return blocks[idx];
 }
 
 
@@ -654,8 +1626,6 @@ function typewriterEffect(el, text, cb) {
   stopTypewriter();
   el.innerHTML = '';
   el.classList.add('typing');
-  const cursor = document.getElementById('cursor');
-  cursor.style.display = 'inline-block';
 
   const spans = [];
   for (let i = 0; i < text.length; i++) {
@@ -666,11 +1636,13 @@ function typewriterEffect(el, text, cb) {
       el.appendChild(s); spans.push(s);
     }
   }
-  el.appendChild(cursor);
 
   let idx = 0;
   function next() {
-    if (idx >= spans.length) { cursor.style.display = 'none'; if (cb) cb(); return; }
+    if (idx >= spans.length) {
+      if (cb) cb();
+      return;
+    }
     if (!spans[idx]) { idx++; twTimeout = setTimeout(next, 100); return; }
     spans[idx].classList.add('visible'); idx++;
     const ch = text[idx-1];
@@ -689,10 +1661,50 @@ function typewriterEffect(el, text, cb) {
 // ══════════════════════════════════════════
 let currentMonth, currentDay;
 
+function showCanvasCosmos(canvasEl, imageEl, seed) {
+  imageEl.style.display = 'none';
+  canvasEl.style.display = 'block';
+  setTimeout(() => drawCosmos(canvasEl, seed), 50);
+}
+
+function showImageOrFallback(imageEl, canvasEl, imagePaths, seed) {
+  let idx = 0;
+
+  function tryNext() {
+    if (idx >= imagePaths.length) {
+      showCanvasCosmos(canvasEl, imageEl, seed);
+      return;
+    }
+
+    const src = imagePaths[idx++];
+    imageEl.onload = () => {
+      imageEl.style.display = 'block';
+      canvasEl.style.display = 'none';
+      imageEl.onload = null;
+      imageEl.onerror = null;
+    };
+    imageEl.onerror = () => {
+      imageEl.onload = null;
+      imageEl.onerror = null;
+      tryNext();
+    };
+    imageEl.src = src;
+  }
+
+  tryNext();
+}
+
+function buildPersonImageCandidates(person) {
+  if (!person || !person.name) return [];
+  return PERSON_IMAGE_EXTENSIONS.map(ext => `${person.name}.${ext}`);
+}
+
 function generate() {
   const month = parseInt(monthSel.value);
   const day = parseInt(daySel.value);
   const person = findPerson(month, day);
+  const cosmosImageEl = document.getElementById('cosmosImage');
+  const cosmosCanvasEl = document.getElementById('cosmosCanvas');
 
   if (!person && !DEFAULT_LETTER) {
     const err = document.getElementById('errorMsg');
@@ -704,14 +1716,25 @@ function generate() {
   currentMonth = month;
   currentDay = day;
 
-  const letterContent = person ? person.letter : DEFAULT_LETTER.letter;
+  const letterContent = person
+    ? person.letter
+    : pickRandomNumberedBlock(DEFAULT_LETTER.letter);
   const seed = birthdaySeed(month, day);
 
   document.getElementById('intro').style.display = 'none';
   document.getElementById('result').style.display = 'block';
   document.getElementById('btnBack').style.display = 'block';
 
-  setTimeout(() => drawCosmos(document.getElementById('cosmosCanvas'), seed), 50);
+  const personImageCandidates = buildPersonImageCandidates(person);
+
+  if (personImageCandidates.length > 0) {
+    const fallbackImages = CUSTOM_COSMOS_IMAGE.trim() ? [CUSTOM_COSMOS_IMAGE] : [];
+    showImageOrFallback(cosmosImageEl, cosmosCanvasEl, [...personImageCandidates, ...fallbackImages], seed);
+  } else if (CUSTOM_COSMOS_IMAGE.trim()) {
+    showImageOrFallback(cosmosImageEl, cosmosCanvasEl, [CUSTOM_COSMOS_IMAGE], seed);
+  } else {
+    showCanvasCosmos(cosmosCanvasEl, cosmosImageEl, seed);
+  }
 
   typewriterEffect(
     document.getElementById('letterText'),
@@ -734,9 +1757,65 @@ function goBack() {
 }
 
 window.addEventListener('resize', () => {
-  if (document.getElementById('result').style.display === 'block') {
+  const canvasEl = document.getElementById('cosmosCanvas');
+  if (document.getElementById('result').style.display === 'block' && canvasEl.style.display !== 'none') {
     drawCosmos(document.getElementById('cosmosCanvas'), birthdaySeed(currentMonth, currentDay));
   }
+});
+
+const mouseComet = document.getElementById('mouseComet');
+const cursorTrailLayer = document.getElementById('cursorTrailLayer');
+let mouseCometVisible = false;
+let lastTrailTime = 0;
+let lastTrailX = null;
+let lastTrailY = null;
+
+function createCursorTrail(x, y, dx, dy) {
+  if (!cursorTrailLayer) return;
+  const seg = document.createElement('span');
+  seg.className = 'cursor-trail';
+  const len = Math.min(18, Math.max(7, Math.hypot(dx, dy) * 0.9));
+  const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+  seg.style.left = `${x}px`;
+  seg.style.top = `${y}px`;
+  seg.style.width = `${len}px`;
+  seg.style.transform = `rotate(${angle}deg)`;
+  cursorTrailLayer.appendChild(seg);
+  seg.addEventListener('animationend', () => seg.remove(), { once: true });
+}
+
+window.addEventListener('mousemove', (e) => {
+  if (!mouseComet) return;
+  const x = e.clientX;
+  const y = e.clientY;
+  mouseComet.style.left = `${x}px`;
+  mouseComet.style.top = `${y}px`;
+
+  if (lastTrailX !== null && lastTrailY !== null) {
+    const now = performance.now();
+    const dx = x - lastTrailX;
+    const dy = y - lastTrailY;
+    const moved = Math.hypot(dx, dy);
+    if (moved > 2 && now - lastTrailTime > 18) {
+      createCursorTrail(lastTrailX, lastTrailY, dx, dy);
+      lastTrailTime = now;
+    }
+  }
+  lastTrailX = x;
+  lastTrailY = y;
+
+  if (!mouseCometVisible) {
+    mouseComet.classList.add('visible');
+    mouseCometVisible = true;
+  }
+});
+
+window.addEventListener('mouseleave', () => {
+  if (!mouseComet) return;
+  mouseComet.classList.remove('visible');
+  mouseCometVisible = false;
+  lastTrailX = null;
+  lastTrailY = null;
 });
 </script>
 </body>
